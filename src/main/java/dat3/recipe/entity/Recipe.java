@@ -27,6 +27,8 @@ public class Recipe {
     @Column(columnDefinition="TEXT")
     private String ingredients;
 
+    private String owner;
+
     private String thumb;
     private String youTube;
     private String source;

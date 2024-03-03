@@ -12,6 +12,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
 
@@ -44,7 +45,7 @@ public class RecipeService {
     }
 
 
-    public RecipeDto createRecipe(RecipeDto recipeDto) {
+    public RecipeDto createRecipe(RecipeDto recipeDto, Principal p) {
         if (recipeDto.id() != null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You cannot provide the id for a new recipe");
         }
@@ -54,6 +55,7 @@ public class RecipeService {
 
 
         Recipe newRecipe = new Recipe();
+        newRecipe.setOwner(p.getName());
         updateRecipe(newRecipe, recipeDto, category);
         recipeRepository.save(newRecipe);
 

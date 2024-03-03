@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
+import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
 
@@ -42,8 +43,8 @@ public class RecipeController {
     //Create
     @PreAuthorize("hasAnyAuthority('USER') or hasAnyAuthority('ADMIN')")
     @PostMapping
-    public ResponseEntity<RecipeDto> createRecipe(@RequestBody RecipeDto recipeDto) {
-        RecipeDto createdRecipe = recipeService.createRecipe(recipeDto);
+    public ResponseEntity<RecipeDto> createRecipe(@RequestBody RecipeDto recipeDto, Principal p) {
+        RecipeDto createdRecipe = recipeService.createRecipe(recipeDto, p);
 
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()
