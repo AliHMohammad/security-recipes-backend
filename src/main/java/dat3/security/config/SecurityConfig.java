@@ -77,6 +77,9 @@ public class SecurityConfig {
             .requestMatchers(mvcMatcherBuilder.pattern(HttpMethod.PUT, "/recipes/{id}")).permitAll()
             .requestMatchers(mvcMatcherBuilder.pattern(HttpMethod.DELETE, "/recipes/{id}")).permitAll()
 
+            //Categories for opgaven
+            .requestMatchers(mvcMatcherBuilder.pattern(HttpMethod.GET, "/categories")).permitAll()
+
 
 
             //Use this to completely disable security (Will not work if endpoints has been marked with @PreAuthorize)
