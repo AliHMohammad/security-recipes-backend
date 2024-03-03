@@ -6,6 +6,7 @@ import dat3.recipe.entity.Recipe;
 import dat3.recipe.service.RecipeService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -39,6 +40,7 @@ public class RecipeController {
     }
 
     //Create
+    @PreAuthorize("hasAnyAuthority('USER') or hasAnyAuthority('ADMIN')")
     @PostMapping
     public ResponseEntity<RecipeDto> createRecipe(@RequestBody RecipeDto recipeDto) {
         RecipeDto createdRecipe = recipeService.createRecipe(recipeDto);
@@ -53,12 +55,14 @@ public class RecipeController {
     }
 
     //Update
+    @PreAuthorize("hasAnyAuthority('USER') or hasAnyAuthority('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<RecipeDto> updateRecipe(@RequestBody RecipeDto recipeDto, @PathVariable("id") int id) {
         return ResponseEntity.ok(recipeService.updateRecipe(recipeDto, id));
     }
 
     //Delete
+    @PreAuthorize("hasAnyAuthority('USER') or hasAnyAuthority('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<RecipeDto> deleteRecipe(@PathVariable("id") int id) {
         return ResponseEntity.ok(recipeService.deleteRecipe(id));
