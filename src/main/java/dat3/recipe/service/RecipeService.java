@@ -6,13 +6,18 @@ import dat3.recipe.entity.Category;
 import dat3.recipe.entity.Recipe;
 import dat3.recipe.repository.CategoryRepository;
 import dat3.recipe.repository.RecipeRepository;
+import dat3.security.service.UserDetailsServiceImp;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.security.Principal;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -74,13 +79,21 @@ public class RecipeService {
     }
 
 
-    public RecipeDto updateRecipe(RecipeDto recipeDto, int id) {
+    public RecipeDto updateRecipe(RecipeDto recipeDto, int id, Principal principal) {
         Category category = categoryRepository.findFirstByNameIgnoreCase(recipeDto.category())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Only existing categories are allowed"));
 
-
         Recipe recipeInDB = recipeRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Recipe with id not found in DB"));
+
+
+        if (!principalIsAdmin(principal)) {
+
+            if (recipeInDB.getOwner() == null || !recipeInDB.getOwner().equals(principal.getName())){
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User is not authorized to update recipes");
+            }
+        }
+
 
         updateRecipe(recipeInDB, recipeDto, category);
         recipeRepository.save(recipeInDB);
@@ -89,14 +102,38 @@ public class RecipeService {
     }
 
 
-    public RecipeDto deleteRecipe(int id) {
+    @Transactional
+    public RecipeDto deleteRecipe(int id, Principal principal) {
         Recipe recipeInDB = recipeRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Recipe not found in db"));
         RecipeDto dto = recipeDtoMapper.apply(recipeInDB);
 
-        recipeInDB.setCategory(null);
+        if (!principalIsAdmin(principal)) {
 
+            if (recipeInDB.getOwner() == null || !recipeInDB.getOwner().equals(principal.getName())){
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User is not authorized to delete recipes");
+            }
+        }
+
+
+        recipeInDB.setCategory(null);
         recipeRepository.delete(recipeInDB);
         return dto;
+    }
+
+
+    private boolean principalIsAdmin(Principal principal) {
+        Authentication authentication = (Authentication) principal;
+        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+
+        boolean isAdmin = false;
+        for (GrantedAuthority authority : authorities) {
+            if ("ADMIN".equals(authority.getAuthority())) {
+                isAdmin = true;
+                break; // No need to continue once we find the role
+            }
+        }
+
+        return isAdmin;
     }
 }

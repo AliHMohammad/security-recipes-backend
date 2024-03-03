@@ -58,14 +58,14 @@ public class RecipeController {
     //Update
     @PreAuthorize("hasAnyAuthority('USER') or hasAnyAuthority('ADMIN')")
     @PutMapping("/{id}")
-    public ResponseEntity<RecipeDto> updateRecipe(@RequestBody RecipeDto recipeDto, @PathVariable("id") int id) {
-        return ResponseEntity.ok(recipeService.updateRecipe(recipeDto, id));
+    public ResponseEntity<RecipeDto> updateRecipe(@RequestBody RecipeDto recipeDto, @PathVariable("id") int id, Principal principal) {
+        return ResponseEntity.ok(recipeService.updateRecipe(recipeDto, id, principal));
     }
 
     //Delete
     @PreAuthorize("hasAnyAuthority('USER') or hasAnyAuthority('ADMIN')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<RecipeDto> deleteRecipe(@PathVariable("id") int id) {
-        return ResponseEntity.ok(recipeService.deleteRecipe(id));
+    public ResponseEntity<RecipeDto> deleteRecipe(@PathVariable("id") int id, Principal principal) {
+        return ResponseEntity.ok(recipeService.deleteRecipe(id, principal));
     }
 }
