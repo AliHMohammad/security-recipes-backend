@@ -1,37 +1,27 @@
 package dat3.recipe.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import dat3.recipe.entity.Recipe;
 import jakarta.persistence.Column;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-public class RecipeDto {
-    private String name;
-    private String instructions;
-    private String ingredients;
+import java.time.LocalDateTime;
 
-    private String thumb;
-    private String youTube;
-    private String source;
 
-    public String getName() {
-        return name;
-    }
+public record RecipeDto(
+        Integer id,
+        String name,
+        String category,
+        String instructions,
+        String ingredients,
+        String youtube,
+        String thumb,
+        String source,
+        LocalDateTime created,
+        LocalDateTime edited
+) {
 
-    public String getInstructions() {
-        return instructions;
-    }
-
-    public String getIngredients() {
-        return ingredients;
-    }
-
-    public String getThumb() {
-        return thumb;
-    }
-
-    public String getYouTube() {
-        return youTube;
-    }
-
-    public String getSource() {
-        return source;
-    }
 }
+

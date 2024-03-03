@@ -44,12 +44,12 @@ public class Recipe {
     }
 
     public Recipe(RecipeDto r, Category c) {
-        this.name = r.getName();
-        this.instructions = r.getInstructions();
-        this.ingredients = r.getIngredients();
-        this.thumb = r.getThumb();
-        this.youTube = r.getYouTube();
-        this.source = r.getSource();
+        this.name = r.name();
+        this.instructions = r.instructions();
+        this.ingredients = r.ingredients();
+        this.thumb = r.thumb();
+        this.youTube = r.youtube();
+        this.source = r.source();
         this.category = c;
     }
 }
