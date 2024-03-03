@@ -17,9 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.security.Principal;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class RecipeService {
@@ -86,10 +84,12 @@ public class RecipeService {
         Recipe recipeInDB = recipeRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Recipe with id not found in DB"));
 
+        //Hvis du ikke er ADMIN...
+        if (!getPrincipalRoles(principal).contains("ADMIN")) {
 
-        if (!principalIsAdmin(principal)) {
-
-            if (recipeInDB.getOwner() == null || !recipeInDB.getOwner().equals(principal.getName())){
+            //Eller forfatter til oprettelsen af opskriften...
+            if (recipeInDB.getOwner() == null || !recipeInDB.getOwner().equals(principal.getName())) {
+                //Så returner UNAUTHORIZED
                 throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User is not authorized to update recipes");
             }
         }
@@ -108,9 +108,12 @@ public class RecipeService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Recipe not found in db"));
         RecipeDto dto = recipeDtoMapper.apply(recipeInDB);
 
-        if (!principalIsAdmin(principal)) {
+        //Hvis du ikke er ADMIN...
+        if (!getPrincipalRoles(principal).contains("ADMIN")) {
 
-            if (recipeInDB.getOwner() == null || !recipeInDB.getOwner().equals(principal.getName())){
+            //Eller forfatter til oprettelsen af opskriften...
+            if (recipeInDB.getOwner() == null || !recipeInDB.getOwner().equals(principal.getName())) {
+                //Så returner UNAUTHORIZED
                 throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User is not authorized to delete recipes");
             }
         }
@@ -121,19 +124,16 @@ public class RecipeService {
         return dto;
     }
 
-
-    private boolean principalIsAdmin(Principal principal) {
+    private Set<String> getPrincipalRoles(Principal principal) {
         Authentication authentication = (Authentication) principal;
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
 
-        boolean isAdmin = false;
+        Set<String> roles = new HashSet<>();
+
         for (GrantedAuthority authority : authorities) {
-            if ("ADMIN".equals(authority.getAuthority())) {
-                isAdmin = true;
-                break; // No need to continue once we find the role
-            }
+            roles.add(authority.getAuthority());
         }
 
-        return isAdmin;
+        return roles;
     }
 }
