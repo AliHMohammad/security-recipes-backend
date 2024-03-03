@@ -43,7 +43,7 @@ public class RecipeService {
         return this.recipeDtoMapper.apply(recipe);
     }
 
-    //@PreAuthorize("hasAnyAuthority('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('USER') or hasAnyAuthority('ADMIN')")
     public RecipeDto createRecipe(RecipeDto recipeDto) {
         if (recipeDto.id() != null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You cannot provide the id for a new recipe");
@@ -60,6 +60,7 @@ public class RecipeService {
         return recipeDtoMapper.apply(newRecipe);
     }
 
+    @PreAuthorize("hasAnyAuthority('USER') or hasAnyAuthority('ADMIN')")
     private void updateRecipe(Recipe original, RecipeDto r, Category category) {
         original.setName(r.name());
         original.setInstructions(r.instructions());
@@ -70,12 +71,8 @@ public class RecipeService {
         original.setCategory(category);
     }
 
-
+    @PreAuthorize("hasAnyAuthority('USER') or hasAnyAuthority('ADMIN')")
     public RecipeDto updateRecipe(RecipeDto recipeDto, int id) {
-        if (recipeDto.id() != null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You cannot change the id of an existing recipe");
-        }
-
         Category category = categoryRepository.findFirstByName(recipeDto.category())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Only existing categories are allowed"));
 
@@ -89,6 +86,7 @@ public class RecipeService {
         return recipeDtoMapper.apply(recipeInDB);
     }
 
+    @PreAuthorize("hasAnyAuthority('USER') or hasAnyAuthority('ADMIN')")
     public RecipeDto deleteRecipe(int id) {
         Recipe recipeInDB = recipeRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Recipe not found in db"));
