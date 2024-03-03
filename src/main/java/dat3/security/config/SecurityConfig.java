@@ -80,6 +80,9 @@ public class SecurityConfig {
             //Categories for opgaven
             .requestMatchers(mvcMatcherBuilder.pattern(HttpMethod.GET, "/categories")).permitAll()
 
+            //info til home-page
+            .requestMatchers(mvcMatcherBuilder.pattern(HttpMethod.GET, "/info")).permitAll()
+
 
 
             //Use this to completely disable security (Will not work if endpoints has been marked with @PreAuthorize)
