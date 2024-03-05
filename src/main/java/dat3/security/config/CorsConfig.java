@@ -14,7 +14,7 @@ public class CorsConfig {
     private static final String[] ALLOWED_ORIGINS = new String[] {
             //"*",
             "https://lively-ocean-03119cc03.4.azurestaticapps.net",
-            "http://127.0.0.1:5173"
+            "http://localhost:5173"
     };
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
