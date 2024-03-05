@@ -6,6 +6,9 @@ import dat3.recipe.entity.Category;
 import dat3.recipe.entity.Recipe;
 import dat3.recipe.repository.CategoryRepository;
 import dat3.recipe.repository.RecipeRepository;
+import dat3.security.entity.Role;
+import dat3.security.entity.UserWithRoles;
+import dat3.security.repository.UserWithRolesRepository;
 import dat3.security.service.UserDetailsServiceImp;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,15 +25,16 @@ import java.util.*;
 @Service
 public class RecipeService {
 
-
     private final RecipeRepository recipeRepository;
     private final CategoryRepository categoryRepository;
     private final RecipeDtoMapper recipeDtoMapper;
+    private final UserWithRolesRepository userWithRolesRepository;
 
-    public RecipeService(RecipeRepository recipeRepository, CategoryRepository categoryRepository, RecipeDtoMapper recipeDtoMapper) {
+    public RecipeService(RecipeRepository recipeRepository, CategoryRepository categoryRepository, RecipeDtoMapper recipeDtoMapper, UserWithRolesRepository userWithRolesRepository) {
         this.recipeRepository = recipeRepository;
         this.categoryRepository = categoryRepository;
         this.recipeDtoMapper = recipeDtoMapper;
+        this.userWithRolesRepository = userWithRolesRepository;
     }
 
 
@@ -65,18 +69,7 @@ public class RecipeService {
         return recipeDtoMapper.apply(newRecipe);
     }
 
-
-    private void updateRecipe(Recipe original, RecipeDto r, Category category) {
-        original.setName(r.name());
-        original.setInstructions(r.instructions());
-        original.setIngredients(r.ingredients());
-        original.setThumb(r.thumb());
-        original.setYouTube(r.youtube());
-        original.setSource(r.source());
-        original.setCategory(category);
-    }
-
-
+    @Transactional
     public RecipeDto updateRecipe(RecipeDto recipeDto, int id, Principal principal) {
         Category category = categoryRepository.findFirstByNameIgnoreCase(recipeDto.category())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Only existing categories are allowed"));
@@ -84,11 +77,15 @@ public class RecipeService {
         Recipe recipeInDB = recipeRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Recipe with id not found in DB"));
 
+        UserWithRoles userInDB = userWithRolesRepository.findById(principal.getName())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        List<String> roles = userInDB.getRoles().stream().map((role) -> role.getRoleName()).toList();
+
         //Hvis du ikke er ADMIN...
-        if (!getPrincipalRoles(principal).contains("ADMIN")) {
+        if (!roles.contains("ADMIN")) {
 
             //Og ej forfatter til oprettelsen af opskriften...
-            if (recipeInDB.getOwner() == null || !recipeInDB.getOwner().equals(principal.getName())) {
+            if (recipeInDB.getOwner() == null || !recipeInDB.getOwner().equals(userInDB.getUsername())) {
                 //Så returner UNAUTHORIZED
                 throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User is not authorized to update recipes");
             }
@@ -108,22 +105,36 @@ public class RecipeService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Recipe not found in db"));
         RecipeDto dto = recipeDtoMapper.apply(recipeInDB);
 
-        //Hvis du ikke er ADMIN...
-        if (!getPrincipalRoles(principal).contains("ADMIN")) {
+        UserWithRoles userInDB = userWithRolesRepository.findById(principal.getName())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        List<String> roles = userInDB.getRoles().stream().map((role) -> role.getRoleName()).toList();
 
-            //Og ej forfatter til oprettelsen af opskriften...
-            if (recipeInDB.getOwner() == null || !recipeInDB.getOwner().equals(principal.getName())) {
+        //Hvis du ikke er ADMIN...
+        if (!roles.contains("ADMIN")) {
+            //og ej forfatter til oprettelsen af opskriften...
+            if (recipeInDB.getOwner() == null || !recipeInDB.getOwner().equals(userInDB.getUsername())) {
                 //Så returner UNAUTHORIZED
                 throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User is not authorized to delete recipes");
             }
         }
-
 
         recipeInDB.setCategory(null);
         recipeRepository.delete(recipeInDB);
         return dto;
     }
 
+    private void updateRecipe(Recipe original, RecipeDto r, Category category) {
+        original.setName(r.name());
+        original.setInstructions(r.instructions());
+        original.setIngredients(r.ingredients());
+        original.setThumb(r.thumb());
+        original.setYouTube(r.youtube());
+        original.setSource(r.source());
+        original.setCategory(category);
+    }
+
+    //En anden måde at hente rollerne på ud fra principal objektet.
+    /*
     private Set<String> getPrincipalRoles(Principal principal) {
         Authentication authentication = (Authentication) principal;
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
@@ -136,4 +147,5 @@ public class RecipeService {
 
         return roles;
     }
+    */
 }
