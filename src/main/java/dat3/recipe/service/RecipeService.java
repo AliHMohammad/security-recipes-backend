@@ -6,12 +6,8 @@ import dat3.recipe.entity.Category;
 import dat3.recipe.entity.Recipe;
 import dat3.recipe.repository.CategoryRepository;
 import dat3.recipe.repository.RecipeRepository;
-import dat3.security.service.UserDetailsServiceImp;
+import dat3.security.service.PrincipalService;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -26,11 +22,13 @@ public class RecipeService {
     private final RecipeRepository recipeRepository;
     private final CategoryRepository categoryRepository;
     private final RecipeDtoMapper recipeDtoMapper;
+    private final PrincipalService principalService;
 
-    public RecipeService(RecipeRepository recipeRepository, CategoryRepository categoryRepository, RecipeDtoMapper recipeDtoMapper) {
+    public RecipeService(RecipeRepository recipeRepository, CategoryRepository categoryRepository, RecipeDtoMapper recipeDtoMapper, PrincipalService principalService) {
         this.recipeRepository = recipeRepository;
         this.categoryRepository = categoryRepository;
         this.recipeDtoMapper = recipeDtoMapper;
+        this.principalService = principalService;
     }
 
 
@@ -85,7 +83,7 @@ public class RecipeService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Recipe with id not found in DB"));
 
         //Hvis du ikke er ADMIN...
-        if (!getPrincipalRoles(principal).contains("ADMIN")) {
+        if (!principalService.getPrincipalRoles(principal).contains("ADMIN")) {
 
             //Og ej forfatter til oprettelsen af opskriften...
             if (recipeInDB.getOwner() == null || !recipeInDB.getOwner().equals(principal.getName())) {
@@ -109,7 +107,7 @@ public class RecipeService {
         RecipeDto dto = recipeDtoMapper.apply(recipeInDB);
 
         //Hvis du ikke er ADMIN...
-        if (!getPrincipalRoles(principal).contains("ADMIN")) {
+        if (!principalService.getPrincipalRoles(principal).contains("ADMIN")) {
 
             //Og ej forfatter til oprettelsen af opskriften...
             if (recipeInDB.getOwner() == null || !recipeInDB.getOwner().equals(principal.getName())) {
@@ -124,7 +122,9 @@ public class RecipeService {
         return dto;
     }
 
-    private Set<String> getPrincipalRoles(Principal principal) {
+    //Rykket til et særskilt service lag som @Component
+
+    /*private Set<String> getPrincipalRoles(Principal principal) {
         Authentication authentication = (Authentication) principal;
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
 
@@ -135,5 +135,5 @@ public class RecipeService {
         }
 
         return roles;
-    }
+    }*/
 }
